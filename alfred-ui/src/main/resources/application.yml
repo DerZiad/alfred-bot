@@ -1,0 +1,50 @@
+# ===========================================================================
+#  Alfred - main configuration
+#
+#  Loaded automatically by Spring Boot from alfred-ui's classpath.
+#  Environment-specific overrides go in application-{profile}.yml
+#  (e.g. application-dev.yml) selected via SPRING_PROFILES_ACTIVE=dev.
+# ===========================================================================
+
+spring:
+  application:
+    name: alfred
+  main:
+    web-application-type: none      # we are a desktop app, no embedded server
+    banner-mode: "off"
+  threads:
+    virtual:
+      enabled: true                 # JDK 21 virtual threads for blocking work
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: llama3.1
+          temperature: 0.7
+
+alfred:
+  ai:
+    default-model: llama3.1
+    default-temperature: 0.7
+    system-prompt: |
+      You are Alfred, a helpful local AI assistant running on the user's machine.
+      Be concise, accurate, and proactive. When unsure, say so.
+
+  audio:
+    # Filesystem paths - override per-OS in application-{mac,win,linux}.yml.
+    whisper-binary: /usr/local/bin/whisper-cli
+    whisper-model: ${user.home}/.alfred/models/ggml-base.en.bin
+    piper-binary:  /usr/local/bin/piper
+    piper-voice:   ${user.home}/.alfred/voices/en_US-amy-medium.onnx
+    wake-word:     "hey alfred"
+
+  memory:
+    database-path: ${user.home}/.alfred/memory.db
+
+logging:
+  level:
+    root: INFO
+    org.tech.alfred: DEBUG
+    org.springframework.ai: INFO

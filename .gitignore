@@ -1,0 +1,36 @@
+HELP.md
+target/
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IDEs ###
+.idea
+*.iws
+*.iml
+*.ipr
+.vscode/
+.classpath
+.project
+.settings
+.factorypath
+.apt_generated
+.springBeans
+.sts4-cache
+/nbproject/private/
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Alfred runtime data ###
+# User-local SQLite store and downloaded models live in ~/.alfred,
+# but contributors sometimes symlink them in for testing - ignore both forms.
+.alfred/
+*.db
+*.db-journal
+
+### Build artifacts ###
+build/
+out/
+*.log

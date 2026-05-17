@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    alfred-ui
+    ===========
+    JavaFX desktop application. This is the executable module:
+      * Spring Boot bootstraps headless (no embedded server).
+      * The Spring ApplicationContext is shared with the JavaFX Application
+        via a static handoff (see JavaFxLauncher) so controllers can inject
+        Spring beans.
+
+    Run from IDE: launch AlfredApplication (or use `mvn javafx:run`).
+    Run jar:     `mvn -pl alfred-ui spring-boot:run` (development)
+                 or build with shade + javafx-maven-plugin for distribution.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.tech</groupId>
+        <artifactId>alfred-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>alfred-ui</artifactId>
+    <name>Alfred UI</name>
+    <description>JavaFX desktop application - the executable module.</description>
+
+    <dependencies>
+        <!-- Internal -->
+        <dependency>
+            <groupId>org.tech</groupId>
+            <artifactId>alfred-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.tech</groupId>
+            <artifactId>alfred-ai</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.tech</groupId>
+            <artifactId>alfred-audio</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.tech</groupId>
+            <artifactId>alfred-memory</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.tech</groupId>
+            <artifactId>alfred-tools</artifactId>
+        </dependency>
+
+        <!-- Spring Boot core only - no web/tomcat -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <!-- JavaFX -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-controls</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-fxml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-graphics</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>org.tech.alfred.ui.AlfredApplication</mainClass>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>org.tech.alfred.ui.AlfredApplication</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

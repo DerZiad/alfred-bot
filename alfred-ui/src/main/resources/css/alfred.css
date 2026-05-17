@@ -1,0 +1,20 @@
+/* Minimal dark theme - tuned for readability of streaming chat output. */
+.alfred-root {
+    -fx-background-color: #1e1f22;
+}
+.alfred-transcript {
+    -fx-control-inner-background: #2b2d31;
+    -fx-text-fill: #e6e6e6;
+    -fx-font-family: "JetBrains Mono", "Consolas", monospace;
+    -fx-font-size: 13;
+}
+.alfred-input-row .text-field {
+    -fx-background-color: #2b2d31;
+    -fx-text-fill: #e6e6e6;
+    -fx-prompt-text-fill: #888;
+}
+.alfred-input-row .button {
+    -fx-background-color: #5865f2;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Console-only logging. File logging is intentionally off by default for a
+    desktop app - users can opt in via SPRING_PROFILES_ACTIVE=file-logging
+    plus an application-file-logging.yml override.
+-->
+<configuration>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="STDOUT"/>
+    </root>
+
+    <logger name="org.tech.alfred" level="DEBUG"/>
+</configuration>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    alfred-audio
+    ===========
+    Audio capture (javax.sound.sampled), Whisper STT, Piper TTS.
+    Adapters call out to whisper.cpp / piper binaries by default; can be
+    swapped for whisper-jni or other libraries via Spring profiles.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.tech</groupId>
+        <artifactId>alfred-parent</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>alfred-audio</artifactId>
+    <name>Alfred Audio</name>
+    <description>Microphone capture, Whisper STT, Piper TTS adapters.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.tech</groupId>
+            <artifactId>alfred-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>
