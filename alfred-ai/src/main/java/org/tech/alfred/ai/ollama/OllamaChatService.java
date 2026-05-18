@@ -47,7 +47,7 @@ public class OllamaChatService implements ChatService {
     public Mono<ChatResponse> chat(ChatRequest request) {
         long started = System.nanoTime();
         ChatClient.ChatClientRequestSpec spec = buildSpec(request);
-
+        log.debug(request.toString());
         return Mono.fromCallable(() -> spec.call().content())
                 .map(text -> new ChatResponse(
                         Message.assistant(text),

@@ -16,6 +16,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  *                            REQUIRED to enable Porcupine; otherwise we fall back
  *                            to the whisper-based detector.
  * @param wakeSensitivity     Detection sensitivity 0..1 (higher = more false positives).
+ * @param inputDevice         Optional case-insensitive substring of the mic mixer name
+ *                            to prefer (e.g. "Headset", "USB"). Blank = system default.
+ * @param outputDevice        Optional case-insensitive substring of the speaker mixer
+ *                            name to prefer for TTS playback. Blank = system default.
  */
 @ConfigurationProperties(prefix = "alfred.audio")
 public record AlfredAudioProperties(
@@ -26,7 +30,9 @@ public record AlfredAudioProperties(
         String wakeWord,
         String porcupineAccessKey,
         String wakeKeywordPath,
-        Float wakeSensitivity
+        Float wakeSensitivity,
+        String inputDevice,
+        String outputDevice
 ) {
     public AlfredAudioProperties {
         if (wakeWord == null || wakeWord.isBlank()) wakeWord = "jarvis";

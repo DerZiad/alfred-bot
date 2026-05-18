@@ -26,6 +26,18 @@ import org.tech.alfred.ui.state.AssistantState;
 public final class ParticleField extends Canvas {
 
     private static final int MAX_PARTICLES = 140;
+    /** D3D RTTexture has a per-GPU max (typically ≥ 8192); clamp here. */
+    private static final double MAX_DIM = 4096;
+
+    /**
+     * Clamp incoming sizes so we never hand JavaFX a NaN, infinite, negative,
+     * or absurdly large dimension. Any of those crash the prism renderer.
+     */
+    private static double sanitize(double v) {
+        if (Double.isNaN(v) || v <= 0) return 1;
+        if (v > MAX_DIM) return MAX_DIM;
+        return v;
+    }
 
     private static final class P {
         double x, y, vx, vy, life, maxLife, size;
@@ -39,7 +51,7 @@ public final class ParticleField extends Canvas {
     private volatile Color tint = Color.web("#00d4ff");
 
     public ParticleField(double width, double height) {
-        super(Math.max(1, width), Math.max(1, height));
+        super(sanitize(width), sanitize(height));
         for (int i = 0; i < particles.length; i++) {
             particles[i] = new P();
             respawn(particles[i], width, height);
@@ -67,11 +79,11 @@ public final class ParticleField extends Canvas {
      */
     public void followSize(javafx.beans.value.ObservableValue<? extends Number> w,
                            javafx.beans.value.ObservableValue<? extends Number> h) {
-        w.addListener((obs, o, n) -> setWidth(Math.max(1, n.doubleValue())));
-        h.addListener((obs, o, n) -> setHeight(Math.max(1, n.doubleValue())));
+        w.addListener((obs, o, n) -> setWidth(sanitize(n.doubleValue())));
+        h.addListener((obs, o, n) -> setHeight(sanitize(n.doubleValue())));
         // Apply current value too.
-        setWidth(Math.max(1, w.getValue().doubleValue()));
-        setHeight(Math.max(1, h.getValue().doubleValue()));
+        setWidth(sanitize(w.getValue().doubleValue()));
+        setHeight(sanitize(h.getValue().doubleValue()));
     }
 
     public void onStateChanged(AssistantState state) {

@@ -206,17 +206,50 @@ public class VoicePipeline {
         ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         AtomicReference<AudioFormatSpec> spec = new AtomicReference<>(AudioFormatSpec.WHISPER_DEFAULT);
         AtomicReference<Long> lastSpeechNanos = new AtomicReference<>(System.nanoTime());
+        // VAD diagnostics: log the live level every ~500ms so a stuck
+        // LISTENING is immediately understandable from logs.
+        int[] frameCount = { 0 };
+        long[] lastLogNanos = { System.nanoTime() };
+        double[] peakLevel = { 0 };
+
+        log.info("LISTENING: utterance buffer open (silence-threshold={}, "
+                + "silence-ms={}, max-ms={})",
+                silenceThreshold, silenceMillis, maxUtteranceMillis);
 
         Disposable sub = mic
                 .takeWhile(frame -> {
+                    frameCount[0]++;
                     long elapsed = (System.nanoTime() - startNanos) / 1_000_000L;
-                    if (elapsed > maxUtteranceMillis) return false;
+                    if (elapsed > maxUtteranceMillis) {
+                        log.info("LISTENING: max-utterance reached ({}ms, {} frames, peak={})",
+                                elapsed, frameCount[0], peakLevel[0]);
+                        return false;
+                    }
                     double level = levelMeter.levelProperty().get();
+                    if (level > peakLevel[0]) peakLevel[0] = level;
                     if (level > silenceThreshold) {
                         lastSpeechNanos.set(System.nanoTime());
                     }
                     long sinceSpeech = (System.nanoTime() - lastSpeechNanos.get()) / 1_000_000L;
-                    return sinceSpeech < silenceMillis;
+
+                    // Periodic heartbeat
+                    if (System.nanoTime() - lastLogNanos[0] > 500_000_000L) {
+                        lastLogNanos[0] = System.nanoTime();
+                        log.info("LISTENING tick: frames={} level={} peak={} "
+                                + "since-speech={}ms threshold={}",
+                                frameCount[0],
+                                String.format("%.4f", level),
+                                String.format("%.4f", peakLevel[0]),
+                                sinceSpeech, silenceThreshold);
+                    }
+
+                    if (sinceSpeech >= silenceMillis) {
+                        log.info("LISTENING: silence detected after {}ms speech, "
+                                + "ending utterance ({} frames buffered, peak={})",
+                                sinceSpeech, frameCount[0], peakLevel[0]);
+                        return false;
+                    }
+                    return true;
                 })
                 .doOnNext(frame -> {
                     spec.set(frame.format());
@@ -230,10 +263,15 @@ public class VoicePipeline {
                     byte[] pcm = buffer.toByteArray();
                     if (pcm.length < spec.get().sampleRateHz() / 4) {
                         // <250ms - probably noise, return to listening.
-                        log.debug("Utterance too short ({} bytes), re-listening", pcm.length);
+                        log.info("Utterance too short ({} bytes, peak={}); "
+                                + "re-listening. Try speaking louder or lowering "
+                                + "alfred.voice.silence-threshold.",
+                                pcm.length, peakLevel[0]);
                         beginListening();
                         return;
                     }
+                    log.info("Utterance complete: {} bytes captured, sending to STT",
+                            pcm.length);
                     transcribeAndRespond(pcm, spec.get());
                 })
                 .subscribe(f -> {}, e -> {

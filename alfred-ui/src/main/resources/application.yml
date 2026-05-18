@@ -59,6 +59,18 @@ alfred:
         would be in order.
 
   audio:
+    # ---- Microphone (input) ----
+    # Case-insensitive substring match against the mixer name. Leave blank
+    # to use the system default. On startup the available inputs are
+    # logged at INFO so you can copy/paste the right name here.
+    # Examples: "USB", "Headset", "Realtek".
+    input-device: "K66"
+
+    # ---- Speaker (output for TTS) ----
+    # Same matching rule. Leave blank for the system default.
+    # Examples: "Logitech G432", "Headphones", "Speakers".
+    output-device: "Logitech G432 Gaming Headset"
+
     # ---- Filesystem paths (override per-OS in application-{mac,win,linux}.yml) ----
     whisper-binary: /usr/local/bin/whisper-cli
     whisper-model:  ${user.home}/.alfred/models/ggml-base.en.bin

@@ -32,8 +32,8 @@ public class AlfredAudioAutoConfiguration {
     private static final Logger log = LoggerFactory.getLogger(AlfredAudioAutoConfiguration.class);
 
     @Bean
-    public AudioCapture audioCapture() {
-        return new MicrophoneCapture();
+    public AudioCapture audioCapture(AlfredAudioProperties props) {
+        return new MicrophoneCapture(props.inputDevice());
     }
 
     @Bean

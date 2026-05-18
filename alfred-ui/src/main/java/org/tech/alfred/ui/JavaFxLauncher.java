@@ -1,6 +1,7 @@
 package org.tech.alfred.ui;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import org.springframework.context.ConfigurableApplicationContext;
 
@@ -48,7 +49,7 @@ public class JavaFxLauncher extends Application {
 
         // Optional app icon - graceful if not present.
         try {
-            Image icon = new Image(getClass().getResourceAsStream("/img/alfred-icon.png"));
+            Image icon = new Image(Objects.requireNonNull(getClass().getResourceAsStream("/img/alfred-icon.png")));
             if (!icon.isError()) stage.getIcons().add(icon);
         } catch (Exception ignored) {
             // No icon shipped yet; the OS-default is fine.
