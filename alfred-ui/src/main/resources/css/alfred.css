@@ -107,6 +107,22 @@
     -fx-effect: dropshadow(gaussian, -alf-cyan-soft, 14, 0.4, 0, 0);
 }
 
+/* ---- AlfredCore center text ---- */
+.alfred-core-title {
+    -fx-text-fill: white;
+    -fx-font-size: 26px;
+    -fx-font-weight: 700;
+    -fx-letter-spacing: 6px;
+    -fx-effect: dropshadow(gaussian, -alf-cyan, 12, 0.5, 0, 0);
+}
+.alfred-core-status {
+    -fx-text-fill: -alf-cyan;
+    -fx-font-size: 11px;
+    -fx-font-weight: 600;
+    -fx-letter-spacing: 5px;
+    -fx-effect: dropshadow(gaussian, rgba(0,212,255,0.8), 6, 0.4, 0, 0);
+}
+
 /* ---- boot overlay ---- */
 .boot-overlay {
     -fx-background-color: radial-gradient(center 50% 50%, radius 70%,

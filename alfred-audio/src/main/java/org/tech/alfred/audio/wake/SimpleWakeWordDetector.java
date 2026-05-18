@@ -1,5 +1,9 @@
 package org.tech.alfred.audio.wake;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.time.Duration;
+import java.util.List;
 import java.util.Locale;
 
 import reactor.core.publisher.Flux;
@@ -28,8 +32,45 @@ public class SimpleWakeWordDetector implements WakeWordDetector {
 
     @Override
     public Flux<WakeEvent> listen(Flux<AudioFrame> frames) {
-        return stt.transcribeStream(frames)
-                .filter(t -> t.text().toLowerCase(Locale.ROOT).contains(phrase))
-                .map(t -> new WakeEvent(phrase, t.confidence(), System.currentTimeMillis()));
+
+        return frames
+            .bufferTimeout(100, Duration.ofSeconds(3))
+            .flatMap(chunk -> {
+
+                byte[] pcm = merge(chunk);
+
+                return stt.transcribe(
+                    pcm,
+                    chunk.get(0).format()
+                );
+            })
+            .filter(t ->
+                t.text()
+                    .toLowerCase(Locale.ROOT)
+                    .contains(phrase)
+            )
+            .map(t ->
+                new WakeEvent(
+                    phrase,
+                    t.confidence(),
+                    System.currentTimeMillis()
+                )
+            );
+    }
+
+    private byte[] merge(List<AudioFrame> frames) {
+
+        ByteArrayOutputStream out =
+            new ByteArrayOutputStream();
+
+        try {
+
+            for (AudioFrame frame : frames) {
+                out.write(frame.samples());
+            }
+
+        } catch (IOException ignored) {}
+
+        return out.toByteArray();
     }
 }

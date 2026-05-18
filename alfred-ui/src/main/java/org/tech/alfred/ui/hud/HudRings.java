@@ -1,44 +1,71 @@
 package org.tech.alfred.ui.hud;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Arc;
 import javafx.scene.shape.ArcType;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.StrokeLineCap;
+import javafx.scene.shape.StrokeType;
 import javafx.util.Duration;
 
 import org.tech.alfred.ui.animation.RingRotator;
 import org.tech.alfred.ui.state.AssistantState;
 
 /**
- * Three concentric arc rings that rotate independently. Each is an open
- * arc (not a full circle), so the rotation is obvious. Together they
- * read as a HUD targeting reticle.
+ * Multi-layered HUD reticle: thin tick-mark ring on the outside, two
+ * arc rings rotating in opposite directions, a dashed segment ring, and
+ * a thin static halo. Replicates the cinematic "iron-man HUD" look.
  *
- * <p>The pipeline accelerates them during {@code THINKING} for "scanning"
- * feel, then drops them back to a calm idle speed.
+ * <p>Each rotating layer has its own {@link RingRotator}; the pipeline
+ * accelerates them during {@code THINKING} and slows them for
+ * {@code SPEAKING}.
  */
 public final class HudRings extends StackPane {
 
-    private final List<Arc> arcs;
+    private final Arc arcOuter;
+    private final Arc arcInner;
+    private final Arc dashedRing;
+    private final Circle staticHalo;
+    private final List<Line> tickMarks = new ArrayList<>();
+
     private final List<RingRotator> rotators;
 
     public HudRings(double outerDiameter) {
         setPickOnBounds(false);
 
-        Arc r1 = ring(outerDiameter * 1.00, 220, 1.6);
-        Arc r2 = ring(outerDiameter * 0.78, 280, 1.2);
-        Arc r3 = ring(outerDiameter * 0.58, 160, 0.9);
-        this.arcs = List.of(r1, r2, r3);
+        // ---- outer rotating arc (slow, big sweep) ----
+        arcOuter = ring(outerDiameter * 1.00, 260, 1.4);
 
-        getChildren().addAll(r1, r2, r3);
+        // ---- inner rotating arc (faster, smaller sweep, opposite direction) ----
+        arcInner = ring(outerDiameter * 0.82, 200, 1.6);
+
+        // ---- dashed segment ring (medium speed, full circle dashed) ----
+        dashedRing = ring(outerDiameter * 0.66, 360, 1.0);
+        dashedRing.getStrokeDashArray().addAll(2.0, 8.0);
+
+        // ---- static thin halo just outside the core ----
+        staticHalo = new Circle(outerDiameter * 0.40);
+        staticHalo.setFill(Color.TRANSPARENT);
+        staticHalo.setStroke(Color.web("#00d4ff", 0.55));
+        staticHalo.setStrokeWidth(0.8);
+        staticHalo.setStrokeType(StrokeType.OUTSIDE);
+
+        // ---- tick marks around the outermost circumference ----
+        buildTickMarks(outerDiameter * 1.06, outerDiameter * 1.10, 64);
+
+        getChildren().add(staticHalo);
+        getChildren().addAll(tickMarks);
+        getChildren().addAll(dashedRing, arcInner, arcOuter);
 
         rotators = List.of(
-                new RingRotator(r1, Duration.seconds(18), true),
-                new RingRotator(r2, Duration.seconds(12), false),
-                new RingRotator(r3, Duration.seconds(7), true));
+                new RingRotator(arcOuter,   Duration.seconds(22), true),
+                new RingRotator(arcInner,   Duration.seconds(14), false),
+                new RingRotator(dashedRing, Duration.seconds(40), true));
         rotators.forEach(RingRotator::play);
 
         getStyleClass().add("hud-rings");
@@ -55,21 +82,39 @@ public final class HudRings extends StackPane {
         return arc;
     }
 
+    private void buildTickMarks(double innerRadius, double outerRadius, int count) {
+        for (int i = 0; i < count; i++) {
+            double angle = (2 * Math.PI * i) / count;
+            double cos = Math.cos(angle);
+            double sin = Math.sin(angle);
+            // Every 4th tick is longer/brighter.
+            boolean major = i % 4 == 0;
+            double rInner = innerRadius;
+            double rOuter = major ? outerRadius : (innerRadius + (outerRadius - innerRadius) * 0.55);
+            Line l = new Line(cos * rInner, sin * rInner, cos * rOuter, sin * rOuter);
+            l.setStroke(Color.web("#00d4ff", major ? 0.85 : 0.45));
+            l.setStrokeWidth(major ? 1.1 : 0.6);
+            l.setStrokeLineCap(StrokeLineCap.ROUND);
+            tickMarks.add(l);
+        }
+    }
+
     public void onStateChanged(AssistantState state) {
         switch (state) {
-            case SLEEP    -> setSpeeds(40, 32, 22);
-            case WAKING   -> setSpeeds(8, 6, 4);
-            case LISTENING -> setSpeeds(18, 12, 7);
-            case THINKING -> setSpeeds(4, 2.8, 1.8);
-            case SPEAKING -> setSpeeds(10, 7, 5);
-            case ERROR    -> setSpeeds(60, 60, 60);
+            case SLEEP     -> setSpeeds(45, 32, 60);
+            case WAKING    -> setSpeeds(8, 6, 12);
+            case LISTENING -> setSpeeds(22, 14, 40);
+            case THINKING  -> setSpeeds(5, 3.2, 10);
+            case SPEAKING  -> setSpeeds(14, 9, 22);
+            case ERROR     -> setSpeeds(70, 70, 70);
         }
-        switch (state) {
-            case THINKING -> applyTint(Color.web("#a78bfa"));
-            case SPEAKING -> applyTint(Color.web("#ff9a3c"));
-            case ERROR    -> applyTint(Color.web("#ff3b3b"));
-            default       -> applyTint(Color.web("#00d4ff"));
-        }
+        Color tint = switch (state) {
+            case THINKING -> Color.web("#a78bfa");
+            case SPEAKING -> Color.web("#ff9a3c");
+            case ERROR    -> Color.web("#ff3b3b");
+            default       -> Color.web("#00d4ff");
+        };
+        applyTint(tint);
     }
 
     private void setSpeeds(double s1, double s2, double s3) {
@@ -79,8 +124,15 @@ public final class HudRings extends StackPane {
     }
 
     private void applyTint(Color color) {
-        for (Arc a : arcs) {
-            a.setStroke(color);
+        arcOuter.setStroke(color);
+        arcInner.setStroke(color);
+        dashedRing.setStroke(color.deriveColor(0, 1, 1, 0.7));
+        staticHalo.setStroke(color.deriveColor(0, 1, 1, 0.55));
+        // Tick marks keep their per-element alpha but pick up the hue.
+        for (int i = 0; i < tickMarks.size(); i++) {
+            Line l = tickMarks.get(i);
+            boolean major = i % 4 == 0;
+            l.setStroke(color.deriveColor(0, 1, 1, major ? 0.85 : 0.45));
         }
     }
 }

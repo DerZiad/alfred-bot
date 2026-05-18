@@ -6,9 +6,14 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.tech.alfred.audio.capture.MicrophoneCapture;
 import org.tech.alfred.audio.stt.WhisperSpeechToText;
+import org.tech.alfred.audio.tts.FallbackTextToSpeech;
 import org.tech.alfred.audio.tts.PiperTextToSpeech;
+import org.tech.alfred.audio.tts.WindowsSapiTextToSpeech;
 import org.tech.alfred.audio.wake.PorcupineWakeWordDetector;
 import org.tech.alfred.audio.wake.SimpleWakeWordDetector;
 import org.tech.alfred.core.audio.AudioCapture;
@@ -43,7 +48,16 @@ public class AlfredAudioAutoConfiguration {
 
     @Bean
     public TextToSpeech textToSpeech(AlfredAudioProperties props) {
-        return new PiperTextToSpeech(props);
+        // Try Piper first (high-quality neural British butler).
+        // Fall back to the built-in Windows SAPI engine so Alfred has a
+        // voice even before Piper is installed.
+        List<TextToSpeech> chain = new ArrayList<>();
+        chain.add(new PiperTextToSpeech(props));
+        if (WindowsSapiTextToSpeech.isSupported()) {
+            chain.add(new WindowsSapiTextToSpeech());
+            log.info("Windows detected — SAPI TTS available as fallback for Piper.");
+        }
+        return new FallbackTextToSpeech(chain);
     }
 
     @Bean

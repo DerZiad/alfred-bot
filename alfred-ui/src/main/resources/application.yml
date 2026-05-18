@@ -71,10 +71,15 @@ alfred:
     # Examples: "Logitech G432", "Headphones", "Speakers".
     output-device: "Logitech G432 Gaming Headset"
 
-    # ---- Filesystem paths (override per-OS in application-{mac,win,linux}.yml) ----
-    whisper-binary: /usr/local/bin/whisper-cli
+    # ---- Whisper STT (Windows) ----
+    # If your release zip has main.exe instead of whisper-cli.exe, just rename
+    # the file below. Forward slashes in YAML — Spring resolves them on Windows.
+    whisper-binary: C:/Tools/whisper/whisper-cli.exe
     whisper-model:  ${user.home}/.alfred/models/ggml-base.en.bin
-    piper-binary:   /usr/local/bin/piper
+
+    # ---- Piper TTS (Windows) ----
+    # Default location once you install Piper. Adjust if you put it elsewhere.
+    piper-binary:   C:/Tools/piper/piper.exe
     # British male voice — matches the butler personality.
     piper-voice:    ${user.home}/.alfred/voices/en_GB-alan-medium.onnx
 

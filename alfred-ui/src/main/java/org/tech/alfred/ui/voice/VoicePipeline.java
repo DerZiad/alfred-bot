@@ -225,7 +225,7 @@ public class VoicePipeline {
                                 elapsed, frameCount[0], peakLevel[0]);
                         return false;
                     }
-                    double level = levelMeter.levelProperty().get();
+                    double level = rmsLevel(frame.samples());
                     if (level > peakLevel[0]) peakLevel[0] = level;
                     if (level > silenceThreshold) {
                         lastSpeechNanos.set(System.nanoTime());
@@ -370,5 +370,18 @@ public class VoicePipeline {
         if (d != null && !d.isDisposed()) {
             try { d.dispose(); } catch (Exception ignored) {}
         }
+    }
+
+    private double rmsLevel(byte[] pcm) {
+        long sum = 0;
+
+        for (int i = 0; i < pcm.length - 1; i += 2) {
+            short sample = (short) ((pcm[i + 1] << 8) | (pcm[i] & 0xff));
+            sum += sample * (long) sample;
+        }
+
+        double mean = sum / (double) (pcm.length / 2);
+
+        return Math.sqrt(mean) / 32768.0;
     }
 }
