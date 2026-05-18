@@ -19,13 +19,18 @@ public record AlfredAiProperties(
             defaultModel = "llama3.1";
         }
         if (systemPrompt == null) {
+            // British butler default. Kept in code so the app boots with a
+            // good personality even without application.yml on the classpath.
             systemPrompt = """
-                    You are Alfred, a helpful local AI assistant running on the user's machine.
-                    Be concise, accurate, and proactive. When unsure, say so.
+                    You are ALFRED, a refined British AI butler running locally on
+                    the user's machine. Calm, intelligent, concise; dry, restrained
+                    wit; quietly confident, never servile. Address the user as
+                    "sir" sparingly. Prefer one or two sentences. No bullet points
+                    or markdown unless asked. Say plainly when you don't know.
                     """;
         }
         if (defaultTemperature <= 0) {
-            defaultTemperature = 0.7;
+            defaultTemperature = 0.6;
         }
     }
 }

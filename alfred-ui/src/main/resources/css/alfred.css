@@ -1,20 +1,126 @@
-/* Minimal dark theme - tuned for readability of streaming chat output. */
-.alfred-root {
-    -fx-background-color: #1e1f22;
+/* =================================================================
+   ALFRED OS — cinematic JARVIS-style theme
+   Palette: deep space navy, neon cyan, accent violet, accent orange.
+   ================================================================= */
+
+.root {
+    -alf-bg-0:        #03070d;  /* deepest */
+    -alf-bg-1:        #050b18;
+    -alf-bg-2:        #0a1424;
+    -alf-line:        rgba(0, 212, 255, 0.18);
+    -alf-line-strong: rgba(0, 212, 255, 0.45);
+    -alf-cyan:        #00d4ff;
+    -alf-cyan-soft:   rgba(0, 212, 255, 0.65);
+    -alf-violet:      #a78bfa;
+    -alf-orange:      #ff9a3c;
+    -alf-text:        #e8f4ff;
+    -alf-text-dim:    #7da3c2;
+    -alf-danger:      #ff3b3b;
+
+    -fx-font-family: "Inter", "Segoe UI", "Helvetica Neue", sans-serif;
 }
-.alfred-transcript {
-    -fx-control-inner-background: #2b2d31;
-    -fx-text-fill: #e6e6e6;
+
+/* The shell sits behind the HUD; the HUD itself draws the background gradient.
+   This rule guarantees a dark backdrop even before the HUD renders. */
+.alfred-shell {
+    -fx-background-color: radial-gradient(center 50% 50%, radius 80%,
+        -alf-bg-2 0%, -alf-bg-1 60%, -alf-bg-0 100%);
+}
+
+.hud-root {
+    -fx-background-color: radial-gradient(center 50% 45%, radius 90%,
+        #0c1a30 0%, #050b18 55%, #02060e 100%);
+}
+
+/* ---- holographic side panels ---- */
+.holo-panel {
+    -fx-background-color:
+        linear-gradient(to bottom,
+            rgba(8, 18, 36, 0.85),
+            rgba(4, 10, 22, 0.78));
+    -fx-background-radius: 6;
+    -fx-border-color: -alf-line-strong;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-effect: dropshadow(gaussian, rgba(0, 212, 255, 0.35), 18, 0.1, 0, 0);
+}
+.holo-panel-title {
+    -fx-text-fill: -alf-cyan;
+    -fx-font-size: 11px;
+    -fx-letter-spacing: 4px;
+    -fx-font-weight: 700;
+    -fx-effect: dropshadow(gaussian, rgba(0, 212, 255, 0.7), 6, 0.3, 0, 0);
+}
+.holo-panel-line {
+    -fx-text-fill: -alf-text;
+    -fx-font-size: 13px;
     -fx-font-family: "JetBrains Mono", "Consolas", monospace;
-    -fx-font-size: 13;
 }
-.alfred-input-row .text-field {
-    -fx-background-color: #2b2d31;
-    -fx-text-fill: #e6e6e6;
-    -fx-prompt-text-fill: #888;
+
+/* ---- conversation transcript ---- */
+.transcript-panel {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
 }
-.alfred-input-row .button {
-    -fx-background-color: #5865f2;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
+.transcript-panel .viewport {
+    -fx-background-color: transparent;
+}
+.transcript-panel > .scroll-bar:vertical {
+    -fx-background-color: transparent;
+    -fx-pref-width: 6;
+}
+.transcript-panel > .scroll-bar:vertical .thumb {
+    -fx-background-color: rgba(0, 212, 255, 0.35);
+    -fx-background-radius: 3;
+}
+.transcript-panel > .scroll-bar .increment-arrow,
+.transcript-panel > .scroll-bar .decrement-arrow,
+.transcript-panel > .scroll-bar .increment-button,
+.transcript-panel > .scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+    -fx-shape: " ";
+}
+
+.transcript-bubble {
+    -fx-padding: 8 12 8 12;
+    -fx-background-radius: 4;
+    -fx-font-size: 13px;
+    -fx-wrap-text: true;
+}
+.transcript-user {
+    -fx-background-color: rgba(0, 212, 255, 0.10);
+    -fx-text-fill: -alf-cyan;
+    -fx-border-color: rgba(0, 212, 255, 0.55);
+    -fx-border-width: 0 0 0 2;
+}
+.transcript-assistant {
+    -fx-background-color: rgba(255, 154, 60, 0.08);
+    -fx-text-fill: -alf-text;
+    -fx-border-color: rgba(255, 154, 60, 0.55);
+    -fx-border-width: 0 0 0 2;
+}
+
+/* ---- HUD rings ---- */
+.hud-ring {
+    -fx-effect: dropshadow(gaussian, -alf-cyan-soft, 14, 0.4, 0, 0);
+}
+
+/* ---- boot overlay ---- */
+.boot-overlay {
+    -fx-background-color: radial-gradient(center 50% 50%, radius 70%,
+        rgba(0, 212, 255, 0.18), rgba(2, 6, 14, 0.0));
+}
+.boot-line {
+    -fx-text-fill: -alf-cyan;
+    -fx-font-family: "JetBrains Mono", "Consolas", monospace;
+    -fx-font-size: 14px;
+    -fx-letter-spacing: 3px;
+    -fx-effect: dropshadow(gaussian, rgba(0, 212, 255, 0.8), 8, 0.4, 0, 0);
+}
+
+/* ---- generic labels ---- */
+.label {
+    -fx-text-fill: -alf-text;
 }

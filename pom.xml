@@ -55,6 +55,7 @@
         <javafx.version>21.0.6</javafx.version>
         <sqlite-jdbc.version>3.46.1.3</sqlite-jdbc.version>
         <langchain4j.version>0.36.2</langchain4j.version>
+        <porcupine.version>3.0.2</porcupine.version>
 
         <junit.version>5.11.3</junit.version>
         <assertj.version>3.26.3</assertj.version>

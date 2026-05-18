@@ -1,5 +1,5 @@
 # ===========================================================================
-#  Alfred - main configuration
+#  ALFRED — main configuration
 #
 #  Loaded automatically by Spring Boot from alfred-ui's classpath.
 #  Environment-specific overrides go in application-{profile}.yml
@@ -22,26 +22,81 @@ spring:
       chat:
         options:
           model: llama3.1
-          temperature: 0.7
+          temperature: 0.6
 
 alfred:
   ai:
     default-model: llama3.1
-    default-temperature: 0.7
+    default-temperature: 0.6
+    # British butler personality. Tone: calm, intelligent, dry wit, premium.
     system-prompt: |
-      You are Alfred, a helpful local AI assistant running on the user's machine.
-      Be concise, accurate, and proactive. When unsure, say so.
+      You are ALFRED, a refined, British-accented AI butler running locally on
+      the user's machine. Inspired by classic cinematic AI assistants.
+
+      VOICE & TONE
+        • Calm, intelligent, elegant. Quietly confident, never servile.
+        • Concise: prefer one or two sentences. Cut filler.
+        • Dry, restrained wit — the raised eyebrow, not the punchline.
+        • Address the user as "sir" sparingly (about once every few replies),
+          never every sentence.
+
+      STYLE
+        • Speak as if voiced aloud: short clauses, natural prosody, no bullet
+          points or markdown unless explicitly asked.
+        • If you don't know something, say so plainly.
+        • Never apologise unnecessarily. Refuse politely if asked to do
+          something unsafe or unethical.
+
+      EXAMPLES
+        User: What time is it?
+        Alfred: A little past three, sir. The afternoon, if it helps.
+
+        User: Remind me to call my sister at 6.
+        Alfred: Noted. I'll prompt you at six on the dot.
+
+        User: I'm tired.
+        Alfred: A reasonable response to the day you've had. Perhaps a break
+        would be in order.
 
   audio:
-    # Filesystem paths - override per-OS in application-{mac,win,linux}.yml.
+    # ---- Filesystem paths (override per-OS in application-{mac,win,linux}.yml) ----
     whisper-binary: /usr/local/bin/whisper-cli
-    whisper-model: ${user.home}/.alfred/models/ggml-base.en.bin
-    piper-binary:  /usr/local/bin/piper
-    piper-voice:   ${user.home}/.alfred/voices/en_US-amy-medium.onnx
-    wake-word:     "hey alfred"
+    whisper-model:  ${user.home}/.alfred/models/ggml-base.en.bin
+    piper-binary:   /usr/local/bin/piper
+    # British male voice — matches the butler personality.
+    piper-voice:    ${user.home}/.alfred/voices/en_GB-alan-medium.onnx
+
+    # ---- Wake word ----
+    # Display label only — the active engine is Porcupine. To enable it you
+    # MUST provide both an access key AND a .ppn keyword file:
+    #
+    #   * Built-in keyword (e.g. "jarvis"): download the matching .ppn from
+    #     https://github.com/Picovoice/porcupine/tree/master/resources/keyword_files
+    #     and point wake-keyword-path at it (use the file for your platform —
+    #     jarvis_windows.ppn, jarvis_mac.ppn, jarvis_linux.ppn).
+    #
+    #   * Custom keyword (e.g. "alfred"): generate one at
+    #     https://console.picovoice.ai/ and point wake-keyword-path at it.
+    #
+    # If wake-keyword-path is blank, Alfred falls back to a whisper-based
+    # detector that listens for the configured `wake-word` phrase.
+    wake-word:           "jarvis"
+    wake-keyword-path:   # e.g. ${user.home}/.alfred/wake/jarvis_windows.ppn
+    wake-sensitivity:    0.6
+    # Picovoice access key. Free for non-commercial use.
+    # Get one at https://console.picovoice.ai/  (or set env PORCUPINE_ACCESS_KEY)
+    porcupine-access-key: ${PORCUPINE_ACCESS_KEY:}
 
   memory:
     database-path: ${user.home}/.alfred/memory.db
+
+  voice:
+    # End-of-utterance detection: stop listening after N ms of audio below
+    # this RMS threshold (0..1).
+    silence-threshold: 0.012
+    silence-millis:    900
+    # Hard cap so a stuck mic never holds the pipeline forever.
+    max-utterance-millis: 15000
 
 logging:
   level:

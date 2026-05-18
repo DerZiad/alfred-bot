@@ -1,83 +1,108 @@
 package org.tech.alfred.ui.view;
 
-import java.util.List;
-import java.util.UUID;
-
+import jakarta.annotation.PreDestroy;
 import org.springframework.stereotype.Component;
 
 import javafx.application.Platform;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.layout.StackPane;
 
-import org.tech.alfred.core.chat.ChatRequest;
-import org.tech.alfred.core.chat.ChatService;
-import org.tech.alfred.core.chat.Message;
-import org.tech.alfred.core.memory.MemoryEntry;
-import org.tech.alfred.core.memory.MemoryStore;
-import org.tech.alfred.ui.conversation.ConversationState;
+import org.tech.alfred.ui.bus.AssistantEvent;
+import org.tech.alfred.ui.bus.EventBus;
+import org.tech.alfred.ui.hud.HudView;
+import org.tech.alfred.ui.state.AssistantState;
+import org.tech.alfred.ui.state.AssistantStateMachine;
+import org.tech.alfred.ui.voice.PlaybackService;
+import org.tech.alfred.ui.voice.VoicePipeline;
 
 /**
- * Controller for {@code main.fxml}. Wired by name (matches {@code fx:controller}).
+ * Slim controller for {@code main.fxml}. Most behavior lives in the HUD
+ * components and the {@link VoicePipeline}; this class is just the glue:
+ * mount the HUD into the FXML container, wire keyboard shortcuts, route
+ * pipeline events into the transcript panel.
  *
- * <p>All dependencies are constructor-injected: this is only possible because
- * {@link org.tech.alfred.ui.JavaFxLauncher} sets a Spring-backed controller
- * factory on the FXMLLoader.
+ * <p>Keyboard shortcuts (global to the scene):
+ * <ul>
+ *   <li>SPACE  - wake Alfred</li>
+ *   <li>ESC    - put Alfred to sleep</li>
+ *   <li>ENTER  - send the contents of the typing fallback (TODO: text input field)</li>
+ * </ul>
  */
 @Component
 public class MainController {
 
-    private final ChatService chat;
-    private final MemoryStore memory;
-    private final ConversationState state;
+    @FXML private StackPane rootContainer;
 
-    @FXML private TextArea transcript;
-    @FXML private TextField input;
-    @FXML private Button sendButton;
+    private final AssistantStateMachine fsm;
+    private final VoicePipeline pipeline;
+    private final EventBus bus;
+    private final PlaybackService playback;
+    private HudView hud;
 
-    public MainController(ChatService chat, MemoryStore memory, ConversationState state) {
-        this.chat = chat;
-        this.memory = memory;
-        this.state = state;
+    public MainController(AssistantStateMachine fsm,
+                          VoicePipeline pipeline,
+                          EventBus bus,
+                          PlaybackService playback) {
+        this.fsm = fsm;
+        this.pipeline = pipeline;
+        this.bus = bus;
+        this.playback = playback;
     }
 
     @FXML
     public void initialize() {
-        input.setOnAction(e -> handleSend());
-        sendButton.setOnAction(e -> handleSend());
+        hud = new HudView(fsm, pipeline::onBootComplete);
+        rootContainer.getChildren().setAll(hud);
+
+        // Bind audio-reactive nodes to live levels. The core and waveform
+        // react to the live mic (user speaking); the spectrum reacts to
+        // Alfred's TTS playback to avoid feedback from speakers.
+        hud.core().levelProperty().bind(pipeline.levelMeter().levelProperty());
+        hud.waveform().levelProperty().bind(pipeline.levelMeter().levelProperty());
+        hud.spectrum().levelProperty().bind(playback.levelProperty());
+
+        // Trigger boot animation on entering WAKING.
+        fsm.stateProperty().addListener((obs, prev, next) -> {
+            if (next == AssistantState.WAKING) {
+                hud.playBootSequence();
+            }
+        });
+
+        // Route bus events into the transcript panel.
+        bus.stream().subscribe(event -> {
+            switch (event) {
+                case AssistantEvent.UserUtterance u ->
+                        hud.transcript().appendUser(u.text());
+                case AssistantEvent.AssistantToken t ->
+                        hud.transcript().appendAssistantToken(t.token());
+                case AssistantEvent.AssistantResponseComplete ignored ->
+                        hud.transcript().sealStream();
+                default -> {}
+            }
+        });
+
+        // Keyboard shortcuts - installed once the scene exists.
+        rootContainer.sceneProperty().addListener((obs, oldScene, scene) -> {
+            if (scene != null) {
+                scene.setOnKeyPressed(e -> {
+                    if (e.getCode() == KeyCode.SPACE) {
+                        pipeline.requestWake("keyboard");
+                    } else if (e.getCode() == KeyCode.ESCAPE) {
+                        pipeline.requestSleep("keyboard");
+                    }
+                });
+                Platform.runLater(rootContainer::requestFocus);
+            }
+        });
+
+        // Start mic + wake detection AFTER the HUD is wired so the WAKING
+        // listener is in place before any wake event can fire.
+        pipeline.start();
     }
 
-    private void handleSend() {
-        String text = input.getText();
-        if (text == null || text.isBlank()) return;
-        input.clear();
-        appendLine("You: " + text);
-
-        Message userMsg = Message.user(text);
-        UUID convId = state.conversationId();
-        memory.save(new MemoryEntry(convId, userMsg, java.time.Instant.now()));
-
-        ChatRequest req = ChatRequest.of(List.of(userMsg));
-        appendLine("Alfred: ");
-
-        StringBuilder buffer = new StringBuilder();
-        chat.stream(req)
-                .doOnNext(token -> Platform.runLater(() -> {
-                    buffer.append(token);
-                    transcript.appendText(token);
-                }))
-                .doOnComplete(() -> {
-                    Message assistant = Message.assistant(buffer.toString());
-                    memory.save(new MemoryEntry(convId, assistant, java.time.Instant.now()));
-                    Platform.runLater(() -> transcript.appendText("\n\n"));
-                })
-                .doOnError(err -> Platform.runLater(
-                        () -> transcript.appendText("\n[error: " + err.getMessage() + "]\n")))
-                .subscribe();
-    }
-
-    private void appendLine(String s) {
-        Platform.runLater(() -> transcript.appendText(s + "\n"));
+    @PreDestroy
+    public void shutdown() {
+        pipeline.stop();
     }
 }
